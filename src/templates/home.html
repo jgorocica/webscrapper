@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %} Web scrapping {% endblock %}
+{% block bodytitle %}
+{% if user.is_authenticated %}
+Hey {{ user.username }} Welcome to Web Scrapping! 😃
+<form action="">
+    {% csrf_token %}
+    <br>
+    <div class="field has-addons">
+        <div class="control is-expanded">
+            <input class="input" id="url" name="url" type="text" placeholder="Copy / Paste URL 🌎 use the following syntax: [http/https]://mysite.com">
+        </div>
+        <div class="control">
+            <button type="button" class="button is-info" onclick="loadButton();">
+                Scrape
+            </button>
+        </div>
+    </div>
+    <article class="message is-invisible" id="notification">
+        <div class="message-header">
+          <p>Notification</p>
+          <button class="delete" aria-label="delete"></button>
+        </div>
+        <div class="message-body">
+        </div>
+      </article>
+</form>
+<hr>
+<section class="section">
+    <div class="columns is-centered">
+        <div class="column is-narrow">
+            <table class="table is-bordered">
+                <thead>
+                    <tr>
+                        <th><abbr title="site_name">Name</abbr></th>
+                        <th><abbr title="Total Links">Total Links</abbr></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in data %}
+                        <tr>
+                            <th>
+                                <a href="links/{{d.id}}">
+                                    {{ d.name|default:"unknown" }}
+                                </a>
+                            </th>
+                            <td>{{d.total_links}}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <!-- Pagination -->
+            <div class="pagination">
+                <nav class="pagination" role="navigation" aria-label="pagination">
+                <ul class="pagination-list">
+                {% if data.has_previous %}
+                    <li>
+                        <a href="?page=1" class="pagination-link">&laquo; first</a>
+                    </li>
+                    <li>
+                        <a href="?page={{ data.previous_page_number }}" class="pagination-previous">previous</a>
+                    </li>
+                {% endif %}
+                <li>
+                    <span class="current pagination-link is-current">
+                        Page {{ data.number }} of {{ data.paginator.num_pages }}
+                    </span>
+                </li>
+        
+                {% if data.has_next %}
+                    <li>
+                        <a href="?page={{ data.next_page_number }}" class="pagination-next">next</a>
+                    </li>
+                    <li>
+                        <a href="?page={{ data.paginator.num_pages }} " class="pagination-link">last &raquo;</a>
+                    </li>
+                {% endif %}
+                </ul>
+                </nav>
+            </div>
+            <!-- End Pagination -->
+        </div>
+    </div>
+</section>
+{% else %}
+<p>You are not logged in</p>
+<a href="{% url 'login' %}">Log In</a>
+{% endif %}
+{% endblock %}
+{% block js %}
+    <script lang="text/javascript">
+        function isValidHttpUrl(string) {
+            let url;
+            let validPrefixes = ["http:", "www.", "https:"];
+
+            try {
+                url = new URL(string);
+            } catch (_) {
+                alert("YOU MUST PROVIDE A VALID LINK 🥺");
+                return false;
+            }
+            return validPrefixes.includes(url.protocol)
+        }
+
+        function submitData(data) {
+            const url = "{% url 'scrap_link' %}";
+            let csrftoken = document.getElementsByName('csrfmiddlewaretoken');
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type':'application/json',
+                    'X-CSRFToken': csrftoken[0].value,
+                }, 
+                body: JSON.stringify({'url': data })
+            })
+            .then((response) => {
+                return response.json();
+            })
+            .then((data) => {
+                let notification = document.getElementById('notification');
+                notification.children[1].innerHTML = "Data will be loaded in a second, page will be refreshed.";
+                notification.classList.remove('is-invisible');
+                setTimeout(function(){
+                    window.location.reload(1);
+                }, 3000);
+                
+                // console.log('data:', data);
+            });
+        }
+
+        function loadButton() {
+            let url = document.getElementById("url").value;
+            if(isValidHttpUrl(url)){
+                submitData(url);
+            }
+            
+        }
+    </script>
+{% endblock %}

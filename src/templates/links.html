@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %} Web scrapping {% endblock %}
+{% block bodytitle %}
+{% if user.is_authenticated %}
+Hey {{ user.username }} Welcome to Web Scrapping! 😃
+
+<style>
+    div.columns {
+      margin-top: 50px;
+    }
+ 
+    h1 {
+      margin-bottom: 20px;
+    }
+ 
+    .table td {
+      font-size: 17px
+    }
+ 
+    .table th {
+      font-size: 17px
+    }
+  </style>
+<hr>
+<button class="button is-secondary">
+    <a href="{% url 'links' %}">
+        🔙 Back
+    </a>
+</button>
+<section class="section">
+    <div class="columns">
+        <div class="column">
+            <table class="table is-bordered">
+                <thead>
+                    <tr>
+                        <th><abbr title="site_name">Text</abbr></th>
+                        <th><abbr title="Total Links">Link</abbr></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in data %}
+                        <tr>
+                            <td>{{d.name}}</td>
+                            <td><a href="{{d.link}}">{{d.link}}</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% else %}
+<p>You are not logged in</p>
+<a href="{% url 'login' %}">Log In</a>
+{% endif %}
+{% endblock %}
+{% block js %}
+    <script lang="text/javascript">
+       
+    </script>
+{% endblock %}
